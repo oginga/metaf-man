@@ -17,14 +17,31 @@ def Creae_DB_If_None_exist():
 		raise e
 '''
 
+def update_DB_meta(**kwargs):
+	db=MySQLdb.connect('localhost','root','526419','mfm')
+	cursor=db.cursor()
+	print str(kwargs['metadata'])
+
+	#sql="UPDATE meta SET metadata ='%s' WHERE path='%s'"%(str(kwargs['metadata']),str(kwargs['path']))
+	sql='''UPDATE meta SET metadata ="%s" WHERE path="%s" '''%(str(kwargs['metadata']),str(kwargs['path']))
+	try:
+		cursor.execute(sql)
+		db.commit()
+		print 'database METADATA updated'
+
+	except:
+		db.rollback
+		print "UNABLE TO UPDATE METADATA"
+	db.close()
+
+
 
 def store_into_DB(**kwargs):
 
 	db=MySQLdb.connect('localhost','root','526419','mfm')
 	cursor=db.cursor()
+
 	sql="INSERT INTO meta(path,metadata) VALUES ('%s','%s')"%(str(kwargs['path']),str(kwargs['metadata']))
-	
-	
 	try:
 		cursor.execute(sql)
 		db.commit()
@@ -56,12 +73,8 @@ def initDir(dir_name):
 				print "successfully created .meta file"
 				with open(meta_file_name) as _meta:
 					meta_data=json.loads(_meta.read())
-					print type(meta_data)
-					print meta_data 
-				#try:
 					store_into_DB(path=meta_data['path'],metadata=meta_data['metadata'])
-				#except:
-				#	print "Error occured in the storage of path and meta-data"
+				print "FILE INIT SUCCESSFULL"
 
 
 		else:
@@ -78,6 +91,28 @@ def initDir(dir_name):
 			print True
 
 
+def edit_metadata():
+	print os.getcwd()
+
+	#get .meta,open as json dictionary 
+	meta_data={}
+	with open('init.json','r') as _meta:
+		meta_data=json.loads(_meta.read())
+		meta_string=raw_input("Enter individual metadata separated by commas:: ")
+		meta_list=meta_string.split(',')
+		for word in meta_list:
+			meta_data['metadata'].append(word)
+
+			#insert new data
+	with open('init.json','w') as upd_meta:
+		json.dump(meta_data,upd_meta,indent=0)
+		
+		#update db
+		update_DB_meta(path=meta_data['path'],metadata=meta_data['metadata'])
+	
+
+
+
 	
 
 if __name__ == '__main__':
@@ -89,3 +124,7 @@ if __name__ == '__main__':
 	print args.folder_name[0]
 
 	initDir(args.folder_name[0])
+	edit_metadata()
+
+#init successful,manipulate the list in the DB metadata field by manipulating the .meta file first
+#create daemon for searching a dummy folder with real files
