@@ -55,7 +55,7 @@ def store_into_DB(**kwargs):
 def createMetaFile():   
 	with open(os.path.join(os.getcwd(),meta_file_name),'w') as metafile:
 		#file_path=
-		init_data={'path':str(os.path.abspath(os.path.join(os.getcwd(),meta_file_name)),),'metadata':[]}
+		init_data={'path':str(os.path.abspath(os.getcwd())),'metadata':[]}
 		
 		json.dump(init_data,metafile,indent=0)
 		return True
