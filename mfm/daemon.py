@@ -7,6 +7,10 @@ import MySQLdb
 import ast
 import operator
 import shutil
+
+#handle same number of matches
+#test cases
+#create daemon
 #import nose
 #choose a root folder ie downloads
 root_dir=os.path.abspath(os.path.join(os.getcwd(),'downloads'))
