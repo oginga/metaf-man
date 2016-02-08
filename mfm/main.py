@@ -85,10 +85,19 @@ def initDir(dir_name):
 			
 	else:
 		print 'DIR exists.Changing to that directory'
+		#check if dir already initialised
 		os.chdir(dir_name)
 		print os.getcwd()
 		if os.path.isfile(meta_file_name):
-			print True
+			print 'Dir already initialised'
+		else:
+			if createMetaFile():
+				print "successfully created .meta file"
+				with open(meta_file_name) as _meta:
+					meta_data=json.loads(_meta.read())
+					store_into_DB(path=meta_data['path'],metadata=meta_data['metadata'])
+				print "FILE INIT SUCCESSFULL"
+
 
 
 def edit_metadata():
@@ -109,11 +118,7 @@ def edit_metadata():
 		
 		#update db
 		update_DB_meta(path=meta_data['path'],metadata=meta_data['metadata'])
-	
 
-
-
-	
 
 if __name__ == '__main__':
 	parser=argparse.ArgumentParser()
