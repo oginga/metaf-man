@@ -22,12 +22,7 @@ files= os.listdir(root_dir)
 
 
 def transfer_files(key,matches_list):
-'''
-Copies the files to their new location
-key:string
-matches_list:list
 
-'''
 	fromLocation=os.path.join(root_dir,key)
 	toLocation=''
 	for row in db_results:
