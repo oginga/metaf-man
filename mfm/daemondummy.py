@@ -8,14 +8,17 @@ import ast
 import operator
 import shutil
 import daemon
-from time import sleep
-
+import time
+import logging 
+from daemon import runner
 #handle same number of matches
 #test cases
 #create daemon
 #import nose
 #choose a root folder ie downloads
-
+root_dir=os.path.join(os.path.abspath(os.sep),'/root/Development/REPOS/metaf-man/mfm/downloads')
+db_results=None
+	    
 
 
 def transfer_files(key,matches_list):
@@ -54,61 +57,91 @@ def retreive_data():
 		return False
 
 
-with daemon.DaemonContext():
 
+class App():
+   
+    def __init__(self):
+        self.stdin_path = '/dev/null'
+        self.stdout_path = '/dev/tty'
+        self.stderr_path = '/dev/tty'
+        self.pidfile_path =  '/var/run/testdaemon/testdaemon.pid'
+        self.pidfile_timeout = 5
+           
+    def run(self):
+	    #Main code goes here ...
 
+	    #check available files on the folder  with extensions--> .doc, .pdf, .xcl, .ppt
 
-	root_dir=os.path.abspath(os.path.join(os.getcwd(),'downloads'))
-	db_results=None
+	    files= os.listdir(root_dir)
+	    doc_pat=re.compile(".pdf|.txt|.docx|.pptx$")
+	    print "FILES: ",files,"\n\n\n"
+	    while True :		
+		
 
-#check available files on the folder  with extensions--> .doc, .pdf, .xcl, .ppt
-	files= os.listdir(root_dir)
+			doc_files_list=[file for file in files if re.findall(doc_pat,file)]
+			matches={}
+			if retreive_data():
+				print db_results
 
-
-	doc_pat=re.compile(".pdf|.txt|.docx|.pptx$")
-
-	print "FILES: ",files,"\n\n\n"
-
-
-	while True :
-
-		doc_files_list=[file for file in files if re.findall(doc_pat,file)]
-		matches={}
-		if retreive_data():
-			print db_results
-
-			for file_name in doc_files_list:
+				for file_name in doc_files_list:
 	
 
-				tally={}	
-				for id in db_results:
+					tally={}	
+					for id in db_results:
 		
-					meta_list=ast.literal_eval(id[2])
+						meta_list=ast.literal_eval(id[2])
 			
-					count=0
+						count=0
 
-					for word in meta_list:
+						for word in meta_list:
 			
-						if re.search(word.lower(),file_name.lower()):
+							if re.search(word.lower(),file_name.lower()):
 				
-							count +=1
+								count +=1
 
-						else:
-							pass
+							else:
+								pass
 
-					tally[id[0]]=count
+						tally[id[0]]=count
 			
-				matches[file_name]=tally
-			print matches
+					matches[file_name]=tally
+				print matches
 
-		ordered_matches=[]
-		for k,v in matches.items():
-			ordered_matches=sorted(v.items(),key=operator.itemgetter(1),reverse=True)	
-			#print ordered_matches
-			transfer_files(k,ordered_matches)
+			ordered_matches=[]
+			for k,v in matches.items():
+				ordered_matches=sorted(v.items(),key=operator.itemgetter(1),reverse=True)	
+				#print ordered_matches
+				transfer_files(k,ordered_matches)
 
 		#create wait time for the program
-		sleep(60)
+				time.sleep(10)
+
+			logger.debug("Debug message")
+			logger.info("Info message")
+			logger.warn("Warning message")
+			logger.error("Error message")
+			time.sleep(10)
+
+            #Note that logger level needs to be set to logging.DEBUG before this shows up in the logs
+        	
+        	
+        	
+        	
+        	
+
+app = App()
+logger = logging.getLogger("DaemonLog")
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler = logging.FileHandler("/var/log/testdaemon/testdaemon.log")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+daemon_runner = runner.DaemonRunner(app)
+#This ensures that the logger file handle does not get closed during daemonization
+daemon_runner.daemon_context.files_preserve=[handler.stream]
+daemon_runner.do_action()
+
 
 
 	
