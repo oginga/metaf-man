@@ -1,6 +1,6 @@
 #!/usr/bin/env python  
 
-import os
+import os,platform
 import json
 import re
 import MySQLdb
@@ -16,23 +16,59 @@ from daemon import runner
 #create daemon
 #import nose
 #choose a root folder ie downloads
-root_dir=os.path.join(os.path.abspath(os.sep),'/root/Development/REPOS/metaf-man/mfm/downloads')
+#root_dir=os.path.join(os.path.abspath(os.sep),'/root/Development/REPOS/metaf-man/mfm/downloads')
+root_dir=os.path.join(os.path.abspath(os.sep),'/root/Downloads')
 db_results=None
+platform=""
 	    
+def choose_root_folder():
+	global root_dir
+
+	#check the OS platform
+	platform=platform.system()
+
+	#if linux,then
+	#if !os.path.isdir(root_dir):
+		#root_dir=
+
+def tie_breaker(ordered_matches):
+	#check for ties in the 1st & 2nd values,if none then return the id of the 1st
+	#else add both ids to list & compare the 2nd wth the 3rd adding the ids to the list if ties found
+	#ordered_matches --> [(24,3),(27,2),(26,1)]
+	#[(24,3),(27,3),(26,3),(23,3)]
+	tied_ids=[]
+
+	#if !(ordered_matches[0][1] == ordered_matches[1][1]):
+	#	return ordered_matches[0][0]
+	#else:
+	#	length=len(ordered_matches)
+	#	tied_ids.add(ordered_matches[0][0])
+	#	for i in range(1,length):
+	#		if ordered_matches[i][1] == ordered_matches[i+1][1]:
+	#			tied_ids.add(ordered_matches[i][0])
+	#			
+	#		else:tied_ids.add(ordered_matches[i][0])
+	#evalute
 
 
-def transfer_files(key,matches_list):
-#'''Copies the files to their new location key:string matches_list:list'''
+def transfer_files(key,ordered_matches):
+#'''Copies the files to their new location key:string ordered_matches:list'''
 	fromLocation=os.path.join(root_dir,key)
 	toLocation=''
 	for row in db_results:
-		if row[0]==matches_list[0][0] and matches_list[0][1]!=0:
+		#row[0]-->id 
+		#ordered_matches --> [(24,3),(27,2),(26,1)]
+		if row[0]==ordered_matches[0][0] and ordered_matches[0][1]!=0:
 			toLocation=row[1]
-			try:
-				shutil.copy2(fromLocation,toLocation)
-				print "Copy successful"
-			except:
-				print 'Error occured'
+			if os.path.isdir(toLocation):
+				try:
+					shutil.move(fromLocation,toLocation)
+					#keep log of the copy
+					print "Copy successful"
+				except:
+					print 'Error occured'
+			else:pass
+			#create dir make a log of the operation
 
 		else:pass
 
@@ -70,13 +106,12 @@ class App():
     def run(self):
 	    #Main code goes here ...
 
-	    #check available files on the folder  with extensions--> .doc, .pdf, .xcl, .ppt
+	    #check available files on the folder  with extensions--> .doc, .pdf, .xcl, .ppt, .txt
 
 	    files= os.listdir(root_dir)
-	    doc_pat=re.compile(".pdf|.txt|.docx|.pptx$")
+	    doc_pat=re.compile(".pdf|.txt|.docx|.xlsx|.pptx$")
 	    print "FILES: ",files,"\n\n\n"
 	    while True :		
-		
 
 			doc_files_list=[file for file in files if re.findall(doc_pat,file)]
 			matches={}
@@ -85,7 +120,6 @@ class App():
 
 				for file_name in doc_files_list:
 	
-
 					tally={}	
 					for id in db_results:
 		
@@ -102,15 +136,22 @@ class App():
 							else:
 								pass
 
+						#tally[dbID]=number of matches
+						#i.e tally --> {27:2,24:3,26:1}
 						tally[id[0]]=count
-			
+
+					#matches[filename]={27:2,24:3,26:1}
+					#matches --> {'file1':{27:2,24:3,26:1},'file2':{27:1,22:3,25:3}}
 					matches[file_name]=tally
 				print matches
 
 			ordered_matches=[]
 			for k,v in matches.items():
 				ordered_matches=sorted(v.items(),key=operator.itemgetter(1),reverse=True)	
-				#print ordered_matches
+				#print ordered_matches 
+				#ordered_matches [(list,of,tuples)]--> [(24,3),(27,2),(26,1)]
+
+				#check for same number of matches to select the most appropriate folder for copy
 				transfer_files(k,ordered_matches)
 
 		#create wait time for the program
@@ -123,9 +164,6 @@ class App():
 			time.sleep(10)
 
             #Note that logger level needs to be set to logging.DEBUG before this shows up in the logs
-        	
-        	
-        	
         	
         	
 
