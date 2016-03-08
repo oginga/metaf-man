@@ -3,6 +3,7 @@ File manager that manages your download locations using metadata
 
 ##basics
 *Create an sql database **mfm**
+
 *Create table **meta** with the structure below:
 
 |Field|Type|Key|Default|Extra|
@@ -12,6 +13,7 @@ File manager that manages your download locations using metadata
 |metadata|tinytext|YES| |NULL| |
 
 *Run the **main.py** from inside a directory of choice (_the directory you want initialized with metadata_)
+
 *Run the daemon using  ```python daemondummy.py  start``` and stop with ```python daemondummy.py  stop```
 
 ##todo
