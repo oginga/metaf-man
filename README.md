@@ -2,9 +2,9 @@
 File manager that manages your download locations using metadata
 
 ##basics
-*Create an sql database **mfm**
+*Create an sql database __mfm__
 
-*Create table **meta** with the structure below:
+*Create table __meta__ with the structure below:
 
 |Field|Type|Key|Default|Extra|
 |:---|---|---|---|---|---|
